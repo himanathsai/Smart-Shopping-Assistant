@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="bg-orbs">
@@ -149,6 +150,53 @@
                     <button class="filter-btn fresh" data-filter="fresh">Fresh</button>
                     <button class="filter-btn expiring" data-filter="expiring">Expiring Soon</button>
                     <button class="filter-btn expired" data-filter="expired">Expired</button>
+                </div>
+            </section>
+
+            <!-- Waste Analytics Dashboard -->
+            <section class="analytics-section glass-panel">
+                <div class="analytics-header">
+                    <h2><i data-lucide="bar-chart-3"></i> Waste Analytics Dashboard</h2>
+                    <p>Track your impact and savings over time</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">Total Added</span>
+                        <span id="metric-total" class="metric-value">0</span>
+                        <div class="metric-icon blue"><i data-lucide="package"></i></div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Consumed</span>
+                        <span id="metric-consumed" class="metric-value">0</span>
+                        <div class="metric-icon green"><i data-lucide="check-circle"></i></div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Wasted</span>
+                        <span id="metric-wasted" class="metric-value">0</span>
+                        <div class="metric-icon red"><i data-lucide="trash-2"></i></div>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">Money Saved</span>
+                        <span id="metric-saved" class="metric-value">$0</span>
+                        <div class="metric-icon gold"><i data-lucide="coins"></i></div>
+                    </div>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <h3>Usage Distribution</h3>
+                        <canvas id="usagePieChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Monthly Progress</h3>
+                        <canvas id="wasteBarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-insight">
+                    <i data-lucide="lightbulb" style="color: var(--status-expiring);"></i>
+                    <p id="analytics-insight-text">Add more data to see personalized waste-reduction insights!</p>
                 </div>
             </section>
 

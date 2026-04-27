@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let donatedItems = JSON.parse(localStorage.getItem('donatedItems')) || [];
     let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+    let analyticsData = JSON.parse(localStorage.getItem('analyticsData')) || {
+        consumed: 12,
+        wasted: 4,
+        totalAdded: 16,
+        monthlyWasted: [1, 2, 0, 1, 0, 4] // Last 6 months
+    };
 
     let currentFilter = 'all';
     let searchQuery = '';
@@ -126,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('pantryItems', JSON.stringify(pantryItems));
         localStorage.setItem('donatedItems', JSON.stringify(donatedItems));
         localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+        localStorage.setItem('analyticsData', JSON.stringify(analyticsData));
         localStorage.setItem('userSettings', JSON.stringify({
             phone: userPhone.value,
             whatsapp: toggleWhatsapp.checked,
@@ -140,6 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
             userPhone.value = settings.phone || '';
             toggleWhatsapp.checked = settings.whatsapp !== undefined ? settings.whatsapp : true;
             toggleSms.checked = settings.sms !== undefined ? settings.sms : true;
+        }
+
+        // Load Theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            isLightMode = true;
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggleBtn.innerHTML = '<i data-lucide="moon"></i>';
+            lucide.createIcons();
         }
     }
 
@@ -198,6 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     donateBtnHtml = `<button class="donate-btn" onclick="openDonationModal(${item.id})"><i data-lucide="heart"></i> Donate</button>`;
                 }
 
+                // Consume button logic
+                let consumeBtnHtml = `<button class="consume-btn" onclick="consumeItem(${item.id})"><i data-lucide="check"></i> Use</button>`;
+
                 const card = document.createElement('div');
                 card.className = `item-card ${status}`;
                 card.innerHTML = `
@@ -205,9 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="item-icon-wrapper">
                             <i data-lucide="${iconName}"></i>
                         </div>
-                        <button class="delete-btn" onclick="deleteItem(${item.id})">
-                            <i data-lucide="trash-2"></i>
-                        </button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            ${consumeBtnHtml}
+                            <button class="delete-btn" onclick="deleteItem(${item.id}, true)">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <h3>${item.name}</h3>
@@ -266,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         pantryItems.push(newItem);
+        analyticsData.totalAdded++;
         
         // Reset form
         nameInput.value = '';
@@ -273,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Render
         renderItems();
+        updateAnalytics();
         saveToLocalStorage();
         
         // Check alerts if the new item is expiring soon
@@ -283,10 +307,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Delete Item (Global function so it can be called from onclick)
-    window.deleteItem = function(id) {
+    window.deleteItem = function(id, isManual = false) {
+        if (isManual) {
+            const item = pantryItems.find(i => i.id === id);
+            if (item) {
+                const days = calculateDaysRemaining(item.expiryDate);
+                if (days < 0) {
+                    analyticsData.wasted++;
+                    const monthIdx = new Date().getMonth() % 6;
+                    analyticsData.monthlyWasted[monthIdx]++;
+                }
+            }
+        }
         pantryItems = pantryItems.filter(item => item.id !== id);
         renderItems();
+        updateAnalytics();
         saveToLocalStorage();
+    };
+
+    window.consumeItem = function(id) {
+        const item = pantryItems.find(i => i.id === id);
+        if (item) {
+            analyticsData.consumed++;
+            pantryItems = pantryItems.filter(i => i.id !== id);
+            showToast('success', 'Enjoy!', `Marked ${item.name} as consumed.`);
+            renderItems();
+            updateAnalytics();
+            saveToLocalStorage();
+        }
     };
 
     // Search
@@ -423,9 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isLightMode) {
             document.documentElement.setAttribute('data-theme', 'light');
             themeToggleBtn.innerHTML = '<i data-lucide="moon"></i>';
+            localStorage.setItem('theme', 'light');
         } else {
             document.documentElement.removeAttribute('data-theme');
             themeToggleBtn.innerHTML = '<i data-lucide="sun"></i>';
+            localStorage.setItem('theme', 'dark');
         }
         lucide.createIcons();
     });
@@ -550,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        testAlertBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid #fff;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div> Sending...';
+        testAlertBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid currentColor;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div> Sending...';
         testAlertBtn.disabled = true;
 
         setTimeout(() => {
@@ -810,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
         googleModal.classList.add('hidden');
         
         // Show loading state on main auth button briefly
-        authSubmitBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid #fff;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>';
+        authSubmitBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid currentColor;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>';
         authSubmitBtn.disabled = true;
 
         setTimeout(() => {
@@ -862,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Simulate API delay
-        authSubmitBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid #fff;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>';
+        authSubmitBtn.innerHTML = '<div class="spinner" style="width:16px;height:16px;display:inline-block;border:2px solid currentColor;border-top:2px solid transparent;border-radius:50%;animation:spin 1s linear infinite;"></div>';
         authSubmitBtn.disabled = true;
 
         setTimeout(() => {
@@ -896,6 +946,115 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial Render & Startup Check
     checkAuthStatus();
     renderShoppingList();
+    updateAnalytics();
+
+    // --- Analytics Dashboard Logic ---
+    let usagePieChart = null;
+    let wasteBarChart = null;
+
+    function updateAnalytics() {
+        // Update Metrics
+        document.getElementById('metric-total').textContent = analyticsData.totalAdded;
+        document.getElementById('metric-consumed').textContent = analyticsData.consumed;
+        document.getElementById('metric-wasted').textContent = analyticsData.wasted;
+        
+        const moneySaved = analyticsData.consumed * 2.5; // Mock: $2.5 saved per item
+        document.getElementById('metric-saved').textContent = `$${moneySaved.toFixed(0)}`;
+
+        // Update Insight
+        const insightText = document.getElementById('analytics-insight-text');
+        const wasteRate = (analyticsData.wasted / (analyticsData.consumed + analyticsData.wasted) * 100) || 0;
+        
+        if (wasteRate < 10) {
+            insightText.textContent = "Great job! Your food waste is exceptionally low this week.";
+        } else if (wasteRate < 25) {
+            insightText.textContent = "Not bad! You're using most of your items. Try using dairy faster.";
+        } else {
+            insightText.textContent = "Warning: Waste levels are high. Check your pantry more often!";
+        }
+
+        renderAnalyticsCharts();
+    }
+
+    function renderAnalyticsCharts() {
+        const pieCtx = document.getElementById('usagePieChart').getContext('2d');
+        const barCtx = document.getElementById('wasteBarChart').getContext('2d');
+
+        // Destroy existing charts to avoid overlap
+        if (usagePieChart) usagePieChart.destroy();
+        if (wasteBarChart) wasteBarChart.destroy();
+
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const textColor = isLight ? '#0f172a' : '#f5f5f5';
+
+        usagePieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Consumed', 'Wasted'],
+                datasets: [{
+                    data: [analyticsData.consumed, analyticsData.wasted],
+                    backgroundColor: ['#34d399', '#f87171'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: textColor, padding: 20 }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const currentMonthIdx = new Date().getMonth();
+        const labels = [];
+        for (let i = 5; i >= 0; i--) {
+            let idx = (currentMonthIdx - i + 12) % 12;
+            labels.push(months[idx]);
+        }
+
+        wasteBarChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Items Wasted',
+                    data: analyticsData.monthlyWasted,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // Handle theme change for charts
+    themeToggleBtn.addEventListener('click', () => {
+        setTimeout(updateAnalytics, 100); // Wait for DOM attribute to update
+    });
 
     // --- Shopping List Logic ---
 

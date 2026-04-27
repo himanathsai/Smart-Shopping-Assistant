@@ -65,8 +65,8 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-image: 
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(255,255,255,0.02) 0%, transparent 40%);
+        radial-gradient(circle at 50% 0%, var(--surface-hover) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, var(--surface-hover) 0%, transparent 40%);
     background-attachment: fixed;
 }
 
@@ -87,7 +87,7 @@ body {
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    background: rgba(5, 5, 5, 0.8);
+    background: var(--surface-glass);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     z-index: 100;
@@ -191,7 +191,9 @@ body {
 
 /* Add Item Section */
 .glass-panel {
-    background: var(--surface);
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 2rem;
@@ -312,6 +314,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
 }
 
+:root[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0);
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
     opacity: 0.8;
 }
@@ -335,8 +341,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .btn-primary:hover {
-    background: #d4d4d4;
-    border-color: #d4d4d4;
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
 /* Controls (Search & Filter) */
@@ -1641,4 +1647,129 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     height: 48px;
     margin-bottom: 1rem;
     opacity: 0.3;
+}
+
+/* Analytics Dashboard Styles */
+.analytics-section {
+    margin-bottom: 2.5rem;
+}
+
+.analytics-header {
+    margin-bottom: 2rem;
+}
+
+.analytics-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.analytics-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.metric-card {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.metric-icon {
+    position: absolute;
+    right: -10px;
+    bottom: -10px;
+    opacity: 0.1;
+    font-size: 3rem;
+}
+
+.metric-icon.blue { color: #3b82f6; opacity: 0.2; }
+.metric-icon.green { color: var(--status-fresh); opacity: 0.2; }
+.metric-icon.red { color: var(--status-expired); opacity: 0.2; }
+.metric-icon.gold { color: #fbbf24; opacity: 0.2; }
+
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.chart-wrapper {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    min-height: 300px;
+}
+
+.chart-wrapper h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.analytics-insight {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--status-expiring-bg);
+    border: 1px solid var(--status-expiring);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.consume-btn {
+    background: var(--status-fresh-bg);
+    color: var(--status-fresh);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.consume-btn:hover {
+    background: var(--status-fresh);
+    color: white;
 }
