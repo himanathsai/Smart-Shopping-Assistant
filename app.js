@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveToCloud() {
         cloudSyncIndicator.classList.add('syncing');
         try {
-            await fetch('http://localhost:5000/api/pantry', {
+            await fetch('/api/pantry', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -166,14 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 cloudSyncIndicator.classList.remove('syncing');
             }, 1000);
         } catch (error) {
-            console.error("Cloud sync failed:", error);
+            console.warn("Cloud sync failed (Backend likely not running):", error);
             cloudSyncIndicator.classList.remove('syncing');
         }
     }
 
     async function loadFromCloud() {
         try {
-            const response = await fetch('http://localhost:5000/api/pantry');
+            const response = await fetch('/api/pantry');
             if (response.ok) {
                 const data = await response.json();
                 if (data.pantryItems) pantryItems = data.pantryItems;
@@ -1242,6 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.lang = 'en-US';
 
         recognition.onstart = () => {
+            console.log("Voice recognition started");
             voiceStatus.textContent = "Listening...";
             voiceTranscript.textContent = "";
             voiceOverlay.classList.remove('hidden');
@@ -1256,14 +1257,21 @@ document.addEventListener('DOMContentLoaded', () => {
             voiceTranscript.textContent = transcript;
             
             if (event.results[0].isFinal) {
+                console.log("Final transcript:", transcript);
                 processVoiceCommand(transcript.toLowerCase());
             }
         };
 
         recognition.onerror = (event) => {
             console.error("Speech recognition error:", event.error);
-            speak("Sorry, I encountered an error. Please try again.");
-            stopVoiceRecognition();
+            if (event.error === 'not-allowed') {
+                speak("Microphone access was denied. Please enable it in your browser settings.");
+                voiceStatus.textContent = "Permission Denied";
+            } else {
+                speak("Sorry, I encountered an error.");
+                voiceStatus.textContent = "Error occurred";
+            }
+            setTimeout(stopVoiceRecognition, 2000);
         };
 
         recognition.onend = () => {
@@ -1285,10 +1293,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     voiceBtn.addEventListener('click', () => {
+        console.log("Microphone button clicked");
         if (recognition) {
-            recognition.start();
+            try {
+                // Show overlay immediately to give feedback
+                voiceOverlay.classList.remove('hidden');
+                voiceStatus.textContent = "Requesting Microphone...";
+                recognition.start();
+            } catch (e) {
+                console.warn("Recognition already started or error:", e);
+                recognition.stop();
+            }
         } else {
-            alert("Speech recognition is not supported in your browser.");
+            alert("Speech recognition is not supported in your browser. Please use Chrome or Edge.");
         }
     });
 
