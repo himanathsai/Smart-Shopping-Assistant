@@ -388,10 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Search
+    // Search with Debounce to reduce lag
+    let searchTimeout;
     searchInput.addEventListener('input', (e) => {
         searchQuery = e.target.value;
-        renderItems();
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            renderItems();
+        }, 300);
     });
 
     // Filter
@@ -1171,28 +1175,32 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         recognition.onresult = (event) => {
-            const transcript = Array.from(event.results)
-                .map(result => result[0])
-                .map(result => result.transcript)
-                .join('');
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
             
             voiceTranscript.textContent = transcript;
             
-            if (event.results[0].isFinal) {
-                console.log("Final transcript:", transcript);
+            if (event.results[event.results.length - 1].isFinal) {
                 processVoiceCommand(transcript.toLowerCase());
             }
         };
 
         recognition.onerror = (event) => {
             console.error("Speech recognition error:", event.error);
+            let msg = "Sorry, I encountered an error.";
             if (event.error === 'not-allowed') {
-                speak("Microphone access was denied. Please enable it in your browser settings.");
-                voiceStatus.textContent = "Permission Denied";
-            } else {
-                speak("Sorry, I encountered an error.");
-                voiceStatus.textContent = "Error occurred";
+                msg = "Microphone access was denied. Please check browser settings.";
+            } else if (event.error === 'network') {
+                msg = "Network error. Voice assistant needs an internet connection.";
+            } else if (event.error === 'no-speech') {
+                msg = "No speech detected. Please try again.";
             }
+            
+            speak(msg);
+            showToast('error', 'Voice Error', msg);
+            voiceStatus.textContent = "Error occurred";
             setTimeout(stopVoiceRecognition, 2000);
         };
 
