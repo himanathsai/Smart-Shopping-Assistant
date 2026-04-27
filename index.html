@@ -87,6 +87,10 @@
                     <span id="user-name-display" class="user-name-display hide-mobile"></span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center; position: relative;">
+                    <div id="cloud-sync-indicator" class="cloud-sync-indicator" title="Cloud Sync Active">
+                        <i data-lucide="cloud"></i>
+                        <div class="sync-dot"></div>
+                    </div>
                     <button id="logout-btn" class="text-btn" style="color: var(--status-expired); display: flex; align-items: center; gap: 0.25rem;">
                         <i data-lucide="log-out"></i> <span class="hide-mobile">Logout</span>
                     </button>
@@ -178,7 +182,7 @@
                     </div>
                     <div class="metric-card">
                         <span class="metric-label">Money Saved</span>
-                        <span id="metric-saved" class="metric-value">$0</span>
+                        <span id="metric-saved" class="metric-value">₹0</span>
                         <div class="metric-icon gold"><i data-lucide="coins"></i></div>
                     </div>
                 </div>

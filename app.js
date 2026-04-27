@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleSms = document.getElementById('toggle-sms');
     const userPhone = document.getElementById('user-phone');
     const clearDataBtn = document.getElementById('clear-data-btn');
+    const cloudSyncIndicator = document.getElementById('cloud-sync-indicator');
 
     // Donation Elements
     const donationModal = document.getElementById('donation-modal');
@@ -138,6 +139,51 @@ document.addEventListener('DOMContentLoaded', () => {
             whatsapp: toggleWhatsapp.checked,
             sms: toggleSms.checked
         }));
+
+        // Trigger Backend Sync
+        saveToCloud();
+    }
+
+    async function saveToCloud() {
+        cloudSyncIndicator.classList.add('syncing');
+        try {
+            await fetch('http://localhost:5000/api/pantry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pantryItems,
+                    donatedItems,
+                    shoppingList,
+                    analyticsData
+                })
+            });
+            setTimeout(() => {
+                cloudSyncIndicator.classList.remove('syncing');
+            }, 1000);
+        } catch (error) {
+            console.error("Cloud sync failed:", error);
+            cloudSyncIndicator.classList.remove('syncing');
+        }
+    }
+
+    async function loadFromCloud() {
+        try {
+            const response = await fetch('http://localhost:5000/api/pantry');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.pantryItems) pantryItems = data.pantryItems;
+                if (data.donatedItems) donatedItems = data.donatedItems;
+                if (data.shoppingList) shoppingList = data.shoppingList;
+                if (data.analyticsData) analyticsData = data.analyticsData;
+                
+                renderItems();
+                renderDonations();
+                renderShoppingList();
+                updateAnalytics();
+            }
+        } catch (error) {
+            console.warn("Could not load from cloud, using local storage fallback.");
+        }
     }
 
     // Load Settings
@@ -945,6 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Render & Startup Check
     checkAuthStatus();
+    loadFromCloud();
     renderShoppingList();
     updateAnalytics();
 
@@ -958,8 +1005,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('metric-consumed').textContent = analyticsData.consumed;
         document.getElementById('metric-wasted').textContent = analyticsData.wasted;
         
-        const moneySaved = analyticsData.consumed * 2.5; // Mock: $2.5 saved per item
-        document.getElementById('metric-saved').textContent = `$${moneySaved.toFixed(0)}`;
+        const moneySaved = analyticsData.consumed * 50; // Mock: ₹50 saved per item
+        document.getElementById('metric-saved').textContent = `₹${moneySaved.toFixed(0)}`;
 
         // Update Insight
         const insightText = document.getElementById('analytics-insight-text');

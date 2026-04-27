@@ -9,13 +9,13 @@ Welcome to **ExpiryGuard AI**, the ultimate Smart Pantry & Expiry Tracking Syste
 - **Google Sign-In:** A fast, simulated "Continue with Google" flow for a modern onboarding experience.
 - **Session Persistence:** You stay logged in even after refreshing the page!
 
-### 2. Intelligent Inventory Management 📦
-- **Barcode Scanner:** Use your device camera to scan product barcodes. Includes a mock database for instant item recognition!
-- **Auto-Save:** Every change you make is instantly saved to your browser's local storage.
-- **Status Indicators:** Fresh (Green), Expiring Soon (Amber), and Expired (Red) badges keep you informed at a glance.
+### 2. Full-Stack Cloud Autosave 💾
+- **Real Persistence:** Your pantry data is now synchronized with a **Flask backend** and stored in the cloud. No more losing data if you clear your browser cache!
+- **Visual Sync Indicator:** Look at the top right for the new **Cloud Sync icon**. A pulsing green dot appears whenever the app is silently backing up your changes.
+- **Hybrid Storage:** The app uses a smart hybrid approach, combining `localStorage` for speed and a backend API for long-term reliability.
 
 ### 3. Waste Analytics Dashboard 📊
-- **Real-time Metrics:** Track your "Total Added," "Consumed," and "Wasted" items.
+- **Real-time Metrics:** Track your "Total Added," "Consumed," and "Wasted" items. It even estimates your **"Money Saved"** in **₹** by preventing food waste!
 - **Visual Insights:** Doughnut charts for usage distribution and bar charts for monthly trends.
 - **"Mark as Used" Action:** Every item has a "Use" button that feeds directly into your analytics.
 

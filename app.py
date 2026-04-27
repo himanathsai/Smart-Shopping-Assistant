@@ -19,6 +19,27 @@ if API_KEY:
 def index():
     return send_from_directory('.', 'index.html')
 
+@app.route('/api/pantry', methods=['GET', 'POST'])
+def handle_pantry():
+    pantry_file = 'pantry_data.json'
+    
+    if request.method == 'POST':
+        try:
+            data = request.json
+            with open(pantry_file, 'w') as f:
+                json.dump(data, f)
+            return jsonify({"status": "success", "message": "Pantry saved to cloud"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+    
+    else: # GET
+        if os.path.exists(pantry_file):
+            with open(pantry_file, 'r') as f:
+                data = json.load(f)
+            return jsonify(data)
+        else:
+            return jsonify({"items": [], "shoppingList": [], "analytics": {}})
+
 @app.route('/api/generate-recipes', methods=['POST'])
 def generate_recipes():
     data = request.json
