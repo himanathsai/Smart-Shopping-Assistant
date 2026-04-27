@@ -1001,9 +1001,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAnalytics();
 
     // --- Analytics Dashboard Logic ---
-    let usagePieChart = null;
-    let wasteBarChart = null;
-
     function updateAnalytics() {
         // Update Metrics
         document.getElementById('metric-total').textContent = analyticsData.totalAdded;
@@ -1024,84 +1021,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             insightText.textContent = "Warning: Waste levels are high. Check your pantry more often!";
         }
-
-        renderAnalyticsCharts();
     }
 
-    function renderAnalyticsCharts() {
-        const pieCtx = document.getElementById('usagePieChart').getContext('2d');
-        const barCtx = document.getElementById('wasteBarChart').getContext('2d');
 
-        // Destroy existing charts to avoid overlap
-        if (usagePieChart) usagePieChart.destroy();
-        if (wasteBarChart) wasteBarChart.destroy();
-
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        const textColor = isLight ? '#0f172a' : '#f5f5f5';
-
-        usagePieChart = new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Consumed', 'Wasted'],
-                datasets: [{
-                    data: [analyticsData.consumed, analyticsData.wasted],
-                    backgroundColor: ['#34d399', '#f87171'],
-                    borderWidth: 0,
-                    hoverOffset: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: textColor, padding: 20 }
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const currentMonthIdx = new Date().getMonth();
-        const labels = [];
-        for (let i = 5; i >= 0; i--) {
-            let idx = (currentMonthIdx - i + 12) % 12;
-            labels.push(months[idx]);
-        }
-
-        wasteBarChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Items Wasted',
-                    data: analyticsData.monthlyWasted,
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: textColor },
-                        grid: { color: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)' }
-                    },
-                    x: {
-                        ticks: { color: textColor },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
 
     // Handle theme change for charts
     themeToggleBtn.addEventListener('click', () => {
