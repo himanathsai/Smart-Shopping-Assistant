@@ -91,6 +91,9 @@
                         <i data-lucide="cloud"></i>
                         <div class="sync-dot"></div>
                     </div>
+                    <button id="voice-btn" class="icon-btn" title="Voice Assistant">
+                        <i data-lucide="mic"></i>
+                    </button>
                     <button id="logout-btn" class="text-btn" style="color: var(--status-expired); display: flex; align-items: center; gap: 0.25rem;">
                         <i data-lucide="log-out"></i> <span class="hide-mobile">Logout</span>
                     </button>
@@ -404,6 +407,28 @@
                 </div>
             </div>
             <button id="close-google-modal" style="margin-top: 2rem; width: 100%; padding: 0.75rem; border: none; background: #f1f3f4; color: #3c4043; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Voice Assistant Overlay -->
+    <div id="voice-overlay" class="scanner-modal hidden" style="z-index: 3000;">
+        <div class="scanner-container" style="max-width: 400px; padding: 3rem; text-align: center; background: var(--surface-glass); backdrop-filter: blur(20px);">
+            <div class="voice-wave-container">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="mic-icon-large">
+                    <i data-lucide="mic"></i>
+                </div>
+            </div>
+            <h2 id="voice-status" style="margin-top: 2rem; color: var(--text-primary);">Listening...</h2>
+            <p id="voice-transcript" style="margin-top: 1rem; color: var(--text-secondary); font-style: italic; min-height: 1.5em;"></p>
+            <p style="margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted);">
+                Try: "Add Milk expiring tomorrow" or "Generate recipes"
+            </p>
+            <button id="stop-voice-btn" class="btn-primary" style="margin-top: 2rem; width: 100%; background: var(--status-expired); border-color: var(--status-expired);">
+                Stop Listening
+            </button>
         </div>
     </div>
 

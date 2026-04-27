@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const userPhone = document.getElementById('user-phone');
     const clearDataBtn = document.getElementById('clear-data-btn');
     const cloudSyncIndicator = document.getElementById('cloud-sync-indicator');
+    const voiceBtn = document.getElementById('voice-btn');
+    const voiceOverlay = document.getElementById('voice-overlay');
+    const stopVoiceBtn = document.getElementById('stop-voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    const voiceTranscript = document.getElementById('voice-transcript');
 
     // Donation Elements
     const donationModal = document.getElementById('donation-modal');
@@ -1225,6 +1230,142 @@ document.addEventListener('DOMContentLoaded', () => {
             saveToLocalStorage();
         }
     });
+
+    // --- Voice Assistant Logic ---
+    let recognition = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            voiceStatus.textContent = "Listening...";
+            voiceTranscript.textContent = "";
+            voiceOverlay.classList.remove('hidden');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+            
+            voiceTranscript.textContent = transcript;
+            
+            if (event.results[0].isFinal) {
+                processVoiceCommand(transcript.toLowerCase());
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech recognition error:", event.error);
+            speak("Sorry, I encountered an error. Please try again.");
+            stopVoiceRecognition();
+        };
+
+        recognition.onend = () => {
+            // Overlay stays until processVoiceCommand finishes or stop is clicked
+        };
+    }
+
+    function speak(text) {
+        if (!window.speechSynthesis) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopVoiceRecognition() {
+        if (recognition) recognition.stop();
+        voiceOverlay.classList.add('hidden');
+    }
+
+    voiceBtn.addEventListener('click', () => {
+        if (recognition) {
+            recognition.start();
+        } else {
+            alert("Speech recognition is not supported in your browser.");
+        }
+    });
+
+    stopVoiceBtn.addEventListener('click', stopVoiceRecognition);
+
+    function processVoiceCommand(cmd) {
+        console.log("Processing command:", cmd);
+        
+        // 1. Navigation Commands
+        if (cmd.includes("show expiring") || cmd.includes("check expiring")) {
+            currentFilter = 'expiring';
+            filterBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === 'expiring'));
+            renderItems();
+            speak("Showing items expiring soon.");
+            setTimeout(stopVoiceRecognition, 1000);
+            return;
+        }
+
+        if (cmd.includes("generate recipes") || cmd.includes("recipe")) {
+            generateRecipesBtn.click();
+            speak("Generating recipes from your expiring items.");
+            setTimeout(stopVoiceRecognition, 1000);
+            return;
+        }
+
+        if (cmd.includes("shopping list")) {
+            document.querySelector('.shopping-section').scrollIntoView({ behavior: 'smooth' });
+            speak("Opening your shopping list.");
+            setTimeout(stopVoiceRecognition, 1000);
+            return;
+        }
+
+        if (cmd.includes("donation") || cmd.includes("donate")) {
+            document.querySelector('.donations-section').scrollIntoView({ behavior: 'smooth' });
+            speak("Opening community donations.");
+            setTimeout(stopVoiceRecognition, 1000);
+            return;
+        }
+
+        // 2. Add Item Command
+        // Pattern: "add [item] expiring [date/relative]"
+        if (cmd.includes("add")) {
+            const addMatch = cmd.match(/add (.*) expiring (.*)/);
+            if (addMatch) {
+                const itemName = addMatch[1].trim();
+                const expiryStr = addMatch[2].trim();
+                let expiryDate = new Date();
+
+                if (expiryStr.includes("tomorrow")) {
+                    expiryDate.setDate(expiryDate.getDate() + 1);
+                } else if (expiryStr.includes("today")) {
+                    // stays today
+                } else if (expiryStr.includes("next week")) {
+                    expiryDate.setDate(expiryDate.getDate() + 7);
+                } else {
+                    // Try parsing as raw date
+                    const parsed = new Date(expiryStr);
+                    if (!isNaN(parsed)) expiryDate = parsed;
+                }
+
+                const dateValue = expiryDate.toISOString().split('T')[0];
+                
+                // Simulate form fill and submit
+                document.getElementById('item-name').value = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+                document.getElementById('expiry-date').value = dateValue;
+                
+                addItemForm.dispatchEvent(new Event('submit'));
+                
+                speak(`Added ${itemName} expiring on ${expiryDate.toDateString()}`);
+                setTimeout(stopVoiceRecognition, 1500);
+                return;
+            }
+        }
+
+        speak("I didn't quite catch that. Try saying: Add milk expiring tomorrow.");
+        setTimeout(stopVoiceRecognition, 2000);
+    }
 
     // Auto-trigger alerts on load if enabled (simulated delay for demo)
     setTimeout(() => {

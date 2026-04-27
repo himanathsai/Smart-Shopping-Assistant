@@ -22,6 +22,13 @@ Welcome to **ExpiryGuard AI**, the ultimate Smart Pantry & Expiry Tracking Syste
 ### 4. Smart Shopping Assistant 🛒
 - **Proactive Suggestions:** One click scans your pantry for missing essentials (Milk, Eggs, etc.) and expired items.
 - **Interactive Checklist:** Track your shopping progress and manually add custom items.
++
++### 5. Smart Voice Assistant 🎙️
++- **Hands-Free Control:** Just click the microphone icon and speak! The app understands complex commands like "Add organic milk expiring next week."
++- **Natural Language Parsing:** It automatically extracts the item name and expiry date from your voice.
++- **Instant Navigation:** Say "Generate recipes" or "Show shopping list" to navigate the app instantly.
++- **Voice Feedback:** The app talks back! ExpiryGuard will confirm your commands with clear voice responses.
++- **Wave Visualization:** Enjoy a premium listening experience with smooth, pulsing wave animations while you speak.
 
 ### 5. AI Recipe Generator 🍳
 - **Waste Rescue:** Uses Google Gemini AI (simulated or real) to suggest recipes specifically using your expiring ingredients.
