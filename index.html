@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpiryGuard AI – Smart Pantry Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+    
+    <!-- Auth Container -->
+    <div id="auth-container" class="auth-container" style="display: none;">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <div class="auth-avatar">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <h2 id="auth-title">Welcome Back</h2>
+                <p id="auth-subtitle">Login to manage your smart pantry</p>
+            </div>
+            
+            <form id="auth-form" onsubmit="event.preventDefault();">
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Email Address</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="mail"></i>
+                        <input type="email" id="auth-email" placeholder="you@example.com" required>
+                    </div>
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; justify-content: space-between;">
+                        <span>Password</span>
+                        <a href="#" class="forgot-password" id="forgot-password-link" style="color: var(--primary); font-size: 0.8rem; text-decoration: none;">Forgot Password?</a>
+                    </label>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="auth-password" placeholder="••••••••" required>
+                        <button type="button" id="toggle-password-btn" class="icon-btn-small" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-muted);">
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                    Login
+                </button>
+            </form>
+
+            <div class="auth-divider" style="display: flex; align-items: center; margin: 1.5rem 0; color: var(--text-muted); font-size: 0.85rem;">
+                <span style="flex: 1; height: 1px; background: var(--border); margin-right: 1rem;"></span>
+                OR
+                <span style="flex: 1; height: 1px; background: var(--border); margin-left: 1rem;"></span>
+            </div>
+
+            <button id="google-signin-btn" class="btn-google" style="width: 100%; margin-bottom: 1.5rem;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" alt="Google" style="width: 18px; height: 18px;">
+                Continue with Google
+            </button>
+
+            <div class="auth-footer" style="text-align: center; font-size: 0.9rem;">
+                <p id="auth-toggle-text">Don't have an account? <a href="#" id="auth-toggle-link" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-app-container" class="app-container" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <i data-lucide="shield-check" class="logo-icon"></i>
+                    <h1>ExpiryGuard <span>AI</span></h1>
+                </div>
+                <div id="user-profile-header" class="user-profile-header hidden" style="display: flex; align-items: center; gap: 0.75rem; margin-right: auto; margin-left: 1.5rem;">
+                    <img id="user-avatar" src="" alt="User" class="avatar-sm">
+                    <span id="user-name-display" class="user-name-display hide-mobile"></span>
+                </div>
+                <div class="header-actions" style="display: flex; gap: 1rem; align-items: center; position: relative;">
+                    <button id="logout-btn" class="text-btn" style="color: var(--status-expired); display: flex; align-items: center; gap: 0.25rem;">
+                        <i data-lucide="log-out"></i> <span class="hide-mobile">Logout</span>
+                    </button>
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                        <i data-lucide="sun"></i>
+                    </button>
+                    <div class="notification-badge" id="notification-btn" title="View Notifications">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-count" class="badge">0</span>
+                    </div>
+                    <!-- Notification Dropdown Panel -->
+                    <div class="notification-panel hidden" id="notification-panel">
+                        <div class="panel-header">
+                            <h3>Alerts</h3>
+                            <button id="clear-alerts" class="text-btn">Clear All</button>
+                        </div>
+                        <div class="panel-body" id="notification-list">
+                            <!-- Notifications injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Add Item Section -->
+            <section class="glass-panel add-item-section">
+                <h2><i data-lucide="plus-circle"></i> Add New Item</h2>
+                <form id="add-item-form" class="add-item-form">
+                    <div class="form-group">
+                        <label for="item-name">Item Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="box"></i>
+                            <input type="text" id="item-name" placeholder="e.g., Milk, Apples" required>
+                            <button type="button" id="scan-btn" class="scan-btn" title="Scan Barcode">
+                                <i data-lucide="scan-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiry-date">Expiry Date</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="calendar"></i>
+                            <input type="date" id="expiry-date" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i data-lucide="plus"></i> Add to Pantry
+                    </button>
+                </form>
+            </section>
+
+            <!-- Controls Section (Search & Filter) -->
+            <section class="controls-section">
+                <div class="search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="search-input" placeholder="Search your pantry...">
+                </div>
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All Items</button>
+                    <button class="filter-btn fresh" data-filter="fresh">Fresh</button>
+                    <button class="filter-btn expiring" data-filter="expiring">Expiring Soon</button>
+                    <button class="filter-btn expired" data-filter="expired">Expired</button>
+                </div>
+            </section>
+
+            <!-- Inventory Display -->
+            <section class="inventory-section">
+                <div class="inventory-header">
+                    <h2>Your Pantry</h2>
+                    <span class="item-count" id="total-items-count">0 items</span>
+                </div>
+                <div id="inventory-grid" class="inventory-grid">
+                    <!-- Items will be injected here by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Smart Recipes Section -->
+            <section class="glass-panel recipes-section" id="recipes-section">
+                <div class="recipes-header">
+                    <div class="recipes-title">
+                        <h2><i data-lucide="chef-hat"></i> Smart Recipes</h2>
+                        <p>Generate recipes using items expiring soon</p>
+                    </div>
+                    <button id="generate-recipes-btn" class="btn-primary">
+                        <i data-lucide="sparkles"></i> Generate Recipes
+                    </button>
+                </div>
+                <div id="recipes-loading" class="recipes-loading hidden">
+                    <div class="ai-pulse"></div>
+                    <p>AI is crafting delicious ideas...</p>
+                </div>
+                <div id="recipes-grid" class="recipes-grid hidden">
+                    <!-- Recipe cards injected here -->
+                </div>
+            </section>
+
+            <!-- Smart Shopping Assistant Section -->
+            <section class="shopping-section glass-panel">
+                <div class="shopping-header">
+                    <div class="shopping-title">
+                        <h2><i data-lucide="shopping-cart"></i> Smart Shopping Assistant</h2>
+                        <p>Intelligent suggestions based on your pantry status</p>
+                    </div>
+                    <button id="generate-shopping-btn" class="btn-primary">
+                        <i data-lucide="sparkles"></i> Generate Shopping List
+                    </button>
+                </div>
+
+                <div id="shopping-list-container" class="shopping-list-container">
+                    <div class="shopping-empty">
+                        <i data-lucide="list-checks"></i>
+                        <h3>Your list is empty</h3>
+                        <p>Click "Generate" to see what your pantry needs!</p>
+                    </div>
+                </div>
+
+                <div class="shopping-actions">
+                    <div class="add-shopping-item">
+                        <input type="text" id="manual-shopping-item" placeholder="Add custom item...">
+                        <button id="add-manual-shopping-btn" class="icon-btn" title="Add Item">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    </div>
+                    <div id="shopping-stats" class="shopping-stats hidden">
+                        <span><i data-lucide="package"></i> <span id="shopping-count">0</span> items</span>
+                        <button id="clear-shopping-btn" class="text-btn" style="color: var(--status-expired);">Clear List</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Community Donations Section -->
+            <section class="glass-panel donations-section" id="donations-section">
+                <div class="donations-header">
+                    <div class="donations-title">
+                        <h2><i data-lucide="heart-handshake"></i> Community Donations</h2>
+                        <p>Items available for pickup to reduce food waste</p>
+                    </div>
+                </div>
+                <div id="donations-grid" class="donations-grid">
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i data-lucide="gift"></i>
+                        <h3>No donations yet</h3>
+                        <p>Be the first to donate an item instead of wasting it!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notification Settings Section -->
+            <section class="glass-panel settings-section" id="settings-section">
+                <div class="settings-header">
+                    <h2><i data-lucide="smartphone"></i> Smart Alerts Settings</h2>
+                    <p>Simulate WhatsApp and SMS alerts for expiring items</p>
+                </div>
+                <div class="settings-grid">
+                    <div class="input-group">
+                        <label>Phone Number (Demo)</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="phone"></i>
+                            <input type="tel" id="user-phone" placeholder="+1 (555) 000-0000">
+                        </div>
+                    </div>
+                    <div class="toggles-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-whatsapp" checked>
+                            <span class="slider"></span>
+                            WhatsApp Alerts
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-sms" checked>
+                            <span class="slider"></span>
+                            SMS Alerts
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button id="test-alert-btn" class="btn-primary">
+                        <i data-lucide="send"></i> Save & Test Alert
+                    </button>
+                    <button id="clear-data-btn" class="btn-outline" style="color: var(--status-expired); border-color: var(--status-expired);">
+                        <i data-lucide="trash-2"></i> Clear All Data
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scanner Modal -->
+    <div id="scanner-modal" class="scanner-modal hidden">
+        <div class="scanner-container">
+            <div class="scanner-header">
+                <h3>Scan Barcode</h3>
+                <button id="close-scanner-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div id="reader"></div>
+            <div class="scanner-hint" id="scanner-hint">
+                Position the barcode inside the frame
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donation-modal" class="scanner-modal hidden">
+        <div class="scanner-container" style="max-width: 450px;">
+            <div class="scanner-header">
+                <h3>Donate Item</h3>
+                <button id="close-donation-btn" class="close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="donation-form-content" style="padding: 1.5rem;">
+                <p id="donation-item-name" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-primary);"></p>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Pickup Location</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="map-pin"></i>
+                        <input type="text" id="donation-location" placeholder="e.g., Main Street, City Center" required>
+                    </div>
+                </div>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>Contact Number (Optional)</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="phone"></i>
+                        <input type="text" id="donation-contact" placeholder="+1 234 567 8900">
+                    </div>
+                </div>
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label>Available Time for Pickup</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="clock"></i>
+                        <input type="text" id="donation-time" placeholder="e.g., Today 5 PM - 8 PM" required>
+                    </div>
+                </div>
+                <button id="submit-donation-btn" class="btn-primary" style="width: 100%;">
+                    <i data-lucide="heart"></i> Confirm Donation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Login Simulated Popup -->
+    <div id="google-modal" class="scanner-modal hidden" style="z-index: 2000;">
+        <div class="scanner-container" style="max-width: 400px; padding: 2rem; background: white;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.svg" alt="Google" style="width: 40px; margin-bottom: 1rem;">
+                <h3 style="color: #3c4043; font-size: 1.5rem;">Sign in</h3>
+                <p style="color: #5f6368;">to continue to ExpiryGuard AI</p>
+            </div>
+            <div id="google-accounts-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="google-account-item" onclick="simulateGoogleLogin('John Doe', 'john.doe@gmail.com', 'https://ui-avatars.com/api/?name=John+Doe&background=random')">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=random" alt="Avatar">
+                    <div>
+                        <div class="name">John Doe</div>
+                        <div class="email">john.doe@gmail.com</div>
+                    </div>
+                </div>
+                <div class="google-account-item" onclick="simulateGoogleLogin('Sarah Smith', 'sarah.s@gmail.com', 'https://ui-avatars.com/api/?name=Sarah+Smith&background=random')">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Smith&background=random" alt="Avatar">
+                    <div>
+                        <div class="name">Sarah Smith</div>
+                        <div class="email">sarah.s@gmail.com</div>
+                    </div>
+                </div>
+            </div>
+            <button id="close-google-modal" style="margin-top: 2rem; width: 100%; padding: 0.75rem; border: none; background: #f1f3f4; color: #3c4043; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
